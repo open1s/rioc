@@ -1,31 +1,51 @@
 
 use std::any::Any;
-use std::collections::HashMap;
+use dashmap::DashMap;
 use crate::interfaces::container::{Container, Provider};
 
 pub struct BasicContainer {
-    instances: HashMap<std::any::TypeId, Box<dyn Any + Send + Sync>>,
+    by_type: DashMap<std::any::TypeId, Box<dyn Any + Send + Sync>>,
+    by_name: DashMap<String, Box<dyn Any + Send + Sync>>,
 }
 
 impl BasicContainer {
     pub fn new() -> Self {
         BasicContainer {
-            instances: HashMap::new(),
+            by_type: DashMap::new(),
+            by_name: DashMap::new(),
         }
     }
 }
 
 impl Container for BasicContainer {
-    fn resolve<T: 'static>(&self) -> Option<&T> {
+    fn resolve<T: 'static + Clone>(&self) -> Option<Box<T>> {
         let type_id = std::any::TypeId::of::<T>();
-        self.instances.get(&type_id)
-            .and_then(|instance| instance.downcast_ref::<T>())
+        self.by_type.get(&type_id)
+            .and_then(|instance| {
+                instance.value()
+                    .downcast_ref::<T>()
+                    .map(|value| Box::new(value.clone()))
+            })
     }
 
-    fn register<P: Provider + 'static>(&mut self, provider: P) {
-        let instance = provider.instantiate();
+    fn resolve_by_name<T:'static + Clone>(&self, name: &str) -> Option<Box<T>> {
+        self.by_name.get(name)
+            .and_then(|instance| {
+                instance.value()
+                    .downcast_ref::<T>()
+                    .map(|value| Box::new(value.clone()))
+            })
+    }
+
+    fn register<P: Provider + 'static>(&self, provider: P) {
+        let instance = provider.instantiate(self);
         let type_id = (*instance).type_id();
-        self.instances.insert(type_id, instance);
+        self.by_type.insert(type_id, instance);
+    }
+
+    fn register_by_name<P: Provider + 'static>(&self,name: String, provider: P) {
+        let instance = provider.instantiate(self);
+        self.by_name.insert(name, instance);
     }
 }
 
@@ -39,28 +59,30 @@ impl Default for BasicContainer {
 mod tests {
     use super::*;
     use std::sync::Arc;
+    use std::thread;
 
+    #[derive(Clone)]
     struct TestProvider(Arc<String>);
 
     impl Provider for TestProvider {
         type Output = Arc<String>;
 
-        fn instantiate(&self) -> Box<Self::Output> {
-            Box::new(Arc::clone(&self.0))
-        }
-
         fn as_any(&self) -> &dyn Any {
             self
+        }
+        
+        fn instantiate<C: Container>(&self, _c: &C) -> Box<Self::Output> {
+            Box::new(Arc::clone(&self.0))
         }
     }
 
     #[test]
     fn test_container() {
-        let mut container = BasicContainer::new();
+        let container = BasicContainer::new();
         let test_value = Arc::new(String::from("test"));
         container.register(TestProvider(Arc::clone(&test_value)));
 
-        let resolved: Option<&Arc<String>> = container.resolve();
+        let resolved = container.resolve::<Arc<String>>();
         assert!(resolved.is_some(), "Failed to resolve Arc<String>");
         if let Some(value) = resolved {
             assert_eq!(value.as_str(), "test");
@@ -69,14 +91,70 @@ mod tests {
 
     #[test]
     fn test_multiple_registrations() {
-        let mut container = BasicContainer::new();
+        let container = BasicContainer::new();
         
         // Register a string
         container.register(TestProvider(Arc::new(String::from("test"))));
         
         // Verify we can resolve it
-        let resolved: Option<&Arc<String>> = container.resolve();
+        let resolved = container.resolve::<Arc<String>>();
         assert!(resolved.is_some());
         assert_eq!(resolved.unwrap().as_str(), "test");
+    }
+
+    #[test]
+    fn test_concurrent_access() {
+        let container = Arc::new(BasicContainer::new());
+        let mut handles = vec![];
+
+        // Spawn multiple threads to test concurrent access
+        for i in 0..10 {
+            let container = Arc::clone(&container);
+            let handle = thread::spawn(move || {
+                let value = Arc::new(format!("test_{}", i));
+                let provider = TestProvider(Arc::clone(&value));
+                
+                // Register and resolve in each thread
+                container.register(provider.clone());
+                
+                // Allow some time for other threads
+                thread::yield_now();
+                
+                // Try to resolve our value
+                let resolved = container.resolve::<Arc<String>>();
+                assert!(resolved.is_some());
+            });
+            handles.push(handle);
+        }
+
+        // Wait for all threads to complete
+        for handle in handles {
+            handle.join().unwrap();
+        }
+    }
+
+    #[test]
+    fn test_concurrent_resolve() {
+        let container = Arc::new(BasicContainer::new());
+        let test_value = Arc::new(String::from("test"));
+        container.register(TestProvider(Arc::clone(&test_value)));
+
+        let mut handles = vec![];
+
+        // Spawn multiple threads to test concurrent resolves
+        for _ in 0..10 {
+            let container = Arc::clone(&container);
+            let handle = thread::spawn(move || {
+                let resolved = container.resolve::<Arc<String>>();
+                assert!(resolved.is_some());
+                assert_eq!(resolved.unwrap().as_str(), "test");
+            });
+            handles.push(handle);
+        }
+
+        // Wait for all threads to complete
+        for handle in handles {
+            handle.join().unwrap();
+        }
     }
 }

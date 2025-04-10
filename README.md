@@ -33,7 +33,6 @@ container.register::<dyn MyInterface, MyImplementation>();
 // Resolve dependencies
 let service: Box<dyn MyInterface> = container.resolve().unwrap();
 ```
-
 ## Documentation
 
 Coming soon...
