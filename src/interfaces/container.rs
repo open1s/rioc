@@ -1,10 +1,8 @@
 
 use std::any::Any;
 
-pub trait Provider {
-    type Output: Any + Send + Sync + 'static;
-    
-    fn instantiate<C: Container>(&self, container: &C) -> Box<Self::Output>;
+pub trait Provider: Send + Sync {    
+    fn instantiate<C: Container>(&self, container: &C) -> Box<Self>;
     fn as_any(&self) -> &dyn Any;
 }
 

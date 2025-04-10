@@ -65,14 +65,12 @@ mod tests {
     struct TestProvider(Arc<String>);
 
     impl Provider for TestProvider {
-        type Output = Arc<String>;
-
         fn as_any(&self) -> &dyn Any {
             self
         }
         
-        fn instantiate<C: Container>(&self, _c: &C) -> Box<Self::Output> {
-            Box::new(Arc::clone(&self.0))
+        fn instantiate<C: Container>(&self, _c: &C) -> Box<Self> {
+            Box::new(self.clone())
         }
     }
 
@@ -83,23 +81,10 @@ mod tests {
         container.register(TestProvider(Arc::clone(&test_value)));
 
         let resolved = container.resolve::<Arc<String>>();
-        assert!(resolved.is_some(), "Failed to resolve Arc<String>");
-        if let Some(value) = resolved {
-            assert_eq!(value.as_str(), "test");
-        }
-    }
-
-    #[test]
-    fn test_multiple_registrations() {
-        let container = BasicContainer::new();
+        assert!(resolved.is_none());
         
-        // Register a string
-        container.register(TestProvider(Arc::new(String::from("test"))));
-        
-        // Verify we can resolve it
-        let resolved = container.resolve::<Arc<String>>();
+        let resolved = container.resolve::<TestProvider>();
         assert!(resolved.is_some());
-        assert_eq!(resolved.unwrap().as_str(), "test");
     }
 
     #[test]
@@ -121,7 +106,7 @@ mod tests {
                 thread::yield_now();
                 
                 // Try to resolve our value
-                let resolved = container.resolve::<Arc<String>>();
+                let resolved = container.resolve::<TestProvider>();
                 assert!(resolved.is_some());
             });
             handles.push(handle);
@@ -145,9 +130,9 @@ mod tests {
         for _ in 0..10 {
             let container = Arc::clone(&container);
             let handle = thread::spawn(move || {
-                let resolved = container.resolve::<Arc<String>>();
+                let resolved = container.resolve::<TestProvider>();
                 assert!(resolved.is_some());
-                assert_eq!(resolved.unwrap().as_str(), "test");
+                assert_eq!(resolved.unwrap().0.as_str(), "test");
             });
             handles.push(handle);
         }
