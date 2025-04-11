@@ -4,6 +4,7 @@ use toml::Value;
 use std::collections::BTreeMap;
 use std::fmt;
 use std::path::{Path};
+use std::sync::Arc;
 use serde::de::DeserializeOwned;
 use rioc::{injectable, provider};
 
@@ -34,6 +35,7 @@ use rioc::{injectable, provider};
 /// assert_eq!(base.get("server.port").unwrap().as_integer(), Some(9090));
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[injectable]
 pub struct ApplicationConfig {
     #[serde(flatten)]
     value: Value,
@@ -223,16 +225,25 @@ pub fn load() -> Result<ApplicationConfig,anyhow::Error> {
     }
 }
 
-#[derive(Debug)]
-#[injectable]
-struct Facade(ApplicationConfig);
+#[derive(Debug,Clone)]
+#[provider]
+#[provide(Arc<ApplicationConfig>, self.get())]
+struct Provider {
+    config: ApplicationConfig,
+}
 
-// #[derive(Debug)]
-// #[provider]
-// #[provide(ApplicationConfig, ApplicationConfig{ value = load().unwrap() }}]
-// struct Provider {
-// }
+impl Provider {
+    fn new() -> Self{
+        let conf = load();
+        Provider {
+            config: conf.unwrap(),
+        }
+    }
 
+    fn get(&self) -> Arc<ApplicationConfig> {
+        Arc::new(self.config.clone())
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -324,5 +335,15 @@ mod tests {
 
        let t =  config.resolve_prefix::<TestConfig>("workspace").unwrap();
        println!("{:?}", t);
+    }
+
+    #[test]
+    fn test_provider() {
+        let provider = Provider::new();
+        let facade: Arc<ApplicationConfig> = provider.provide();
+        println!("{:?}", facade);
+
+        let facade1: Arc<ApplicationConfig> = provider.provide();
+        println!("{:?}", facade1);
     }
 }
