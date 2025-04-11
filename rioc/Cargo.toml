@@ -1,0 +1,13 @@
+[package]
+name = "rioc"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+
+[features]
+
+[dependencies]
+imacro = { path = "../imacro" ,version = "0.4"}
+ibag = { git = "https://github.com/open1s/ibag.git" }
+rgo = { git = "https://github.com/open1s/rgo.git" }
