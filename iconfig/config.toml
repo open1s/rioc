@@ -1,0 +1,24 @@
+[workspace]
+resolver = "2"
+
+default-members = [
+    "imacro",
+    "rioc",
+    "iconfig",
+    "iconfig1"
+]
+
+
+members = [
+    "imacro",
+    "rioc",
+    'examples/*',
+    "iconfig"
+]
+
+[dependencies]
+toml = "0.8"
+anyhow = { version = "1.0"}
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0"}
+rioc = { path='../rioc'}

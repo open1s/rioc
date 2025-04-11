@@ -13,6 +13,7 @@ members = [
     "rioc",
     'examples/*',
     "iconfig"
- ]
+]
 
-
+[debug]
+level = 1

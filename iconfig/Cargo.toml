@@ -1,0 +1,14 @@
+[package]
+name = "iconfig"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+toml = "0.8"
+anyhow = { version = "1.0"}
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0"}
+rioc = { path='../rioc'}
+
+[dev-dependencies]
+tempfile = "3.8"
