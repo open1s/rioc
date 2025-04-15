@@ -228,14 +228,14 @@ pub fn load() -> Result<ApplicationConfig,anyhow::Error> {
 #[derive(Debug,Clone)]
 #[provider]
 #[provide(Arc<ApplicationConfig>, self.get())]
-pub struct Provider {
+pub struct ConfigProvider {
     config: ApplicationConfig,
 }
 
-impl Provider {
+impl ConfigProvider {
     pub fn new() -> Self{
         let conf = load();
-        Provider {
+        ConfigProvider {
             config: conf.unwrap(),
         }
     }
@@ -339,7 +339,7 @@ mod tests {
 
     #[test]
     fn test_provider() {
-        let provider = Provider::new();
+        let provider = ConfigProvider::new();
         let facade: Arc<ApplicationConfig> = provider.provide();
         println!("{:?}", facade);
 

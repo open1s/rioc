@@ -75,7 +75,7 @@ checksum = "3ff763b9c930282f08130bc06008bc1c6dd2c6f2256a27ceaf02813ecb1e41c5"
 
 [[package]]
 name = "iconfig"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "anyhow",
  "rioc 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
