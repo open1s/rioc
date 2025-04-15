@@ -228,19 +228,19 @@ pub fn load() -> Result<ApplicationConfig,anyhow::Error> {
 #[derive(Debug,Clone)]
 #[provider]
 #[provide(Arc<ApplicationConfig>, self.get())]
-struct Provider {
+pub struct Provider {
     config: ApplicationConfig,
 }
 
 impl Provider {
-    fn new() -> Self{
+    pub fn new() -> Self{
         let conf = load();
         Provider {
             config: conf.unwrap(),
         }
     }
 
-    fn get(&self) -> Arc<ApplicationConfig> {
+    pub fn get(&self) -> Arc<ApplicationConfig> {
         Arc::new(self.config.clone())
     }
 }

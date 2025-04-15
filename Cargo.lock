@@ -12,7 +12,7 @@ checksum = "dcfed56ad506cb2c684a14971b8861fdc3baaaae314b9e5f9bb532cbe3ba7a4f"
 name = "basic"
 version = "0.1.0"
 dependencies = [
- "rioc",
+ "rioc 0.1.1",
 ]
 
 [[package]]
@@ -70,14 +70,15 @@ checksum = "bf151400ff0baff5465007dd2f3e717f3fe502074ca563069ce3a6629d07b289"
 [[package]]
 name = "ibag"
 version = "0.3.3"
-source = "git+https://github.com/open1s/ibag.git#2c40966ef90862c4c367b26bf99b1eaae9e88263"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ff763b9c930282f08130bc06008bc1c6dd2c6f2256a27ceaf02813ecb1e41c5"
 
 [[package]]
 name = "iconfig"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
- "rioc",
+ "rioc 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "tempfile",
@@ -90,7 +91,18 @@ version = "0.4.4"
 dependencies = [
  "proc-macro2",
  "quote",
- "rioc",
+ "rioc 0.1.1",
+ "syn",
+]
+
+[[package]]
+name = "imacro"
+version = "0.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8aecc99b5396212794863a348e07bce62aee4bc5e59cfb1f84b1b96bbba08de5"
+dependencies = [
+ "proc-macro2",
+ "quote",
  "syn",
 ]
 
@@ -103,6 +115,12 @@ dependencies = [
  "equivalent",
  "hashbrown",
 ]
+
+[[package]]
+name = "irgo"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9651bea43769bc4f1e3e4907ab590f1d3342f0a8b5998c0b30e4b1fed063c7ba"
 
 [[package]]
 name = "itoa"
@@ -159,17 +177,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "74765f6d916ee2faa39bc8e68e4f3ed8949b48cccdac59983d287a7cb71ce9c5"
 
 [[package]]
-name = "rgo"
-version = "0.2.0"
-source = "git+https://github.com/open1s/rgo.git#c77c1aa5ff659572094db68764865401d98910ee"
+name = "rioc"
+version = "0.1.1"
+dependencies = [
+ "ibag",
+ "imacro 0.4.4",
+ "irgo",
+]
 
 [[package]]
 name = "rioc"
-version = "0.1.0"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "746730d4dd5684c712ed76b029b8a8ea89982e3b40719dd7ac2dae7a89e2162b"
 dependencies = [
  "ibag",
- "imacro",
- "rgo",
+ "imacro 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "irgo",
 ]
 
 [[package]]

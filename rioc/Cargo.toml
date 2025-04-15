@@ -1,7 +1,11 @@
 [package]
 name = "rioc"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
+description = "Zero cost dependency injection macros"
+rust-version = "1.60"
+license = "MIT"
+repository = "https://github.com/open1s/rioc"
 
 [lib]
 
@@ -9,5 +13,5 @@ edition = "2021"
 
 [dependencies]
 imacro = { path = "../imacro" ,version = "0.4"}
-ibag = { git = "https://github.com/open1s/ibag.git" }
-rgo = { git = "https://github.com/open1s/rgo.git" }
+ibag = { version = "0.3" }
+irgo = { version = "0.2" }
