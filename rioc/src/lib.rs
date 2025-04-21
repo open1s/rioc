@@ -1,4 +1,19 @@
 #![allow(unused_imports)]
+pub mod function;
+pub mod layer;
+
+pub use function::Service;
+pub use function::service;
+pub use function::Function;
+pub use layer::LayerChain;
+pub use layer::Layer;
+pub use layer::LayerResult;
+pub use layer::Direction;
+pub use layer::ChainContext;
+pub use layer::PayLoad;
+pub use layer::SharedLayer;
+pub use layer::ProtocolAware;
+pub use layer::LayerBuilder;
 
 pub use imacro::{
     inject, injectable, module, provider, InjectableHelperAttr, ModuleHelperAttr,
