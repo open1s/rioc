@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::{cell::RefCell, collections::HashMap};
 use std::clone;
 use std::collections::VecDeque;
 use std::error::Error;
@@ -8,13 +8,13 @@ use crate::function::{service, Function, Service};
 
 #[derive(Debug, Clone)]
 pub struct ChainContext {
-    pub data: String,
+    pub data: HashMap<String,String>,
 }
 
 #[derive(Debug, Clone)]
 pub struct PayLoad {
-    pub data: String,
-    pub ctx: ChainContext,
+    pub data: Option<String>,
+    pub ctx: Option<ChainContext>,
 }
 
 #[derive(Clone, Debug)]
@@ -236,8 +236,8 @@ mod tests {
     fn test_empty_chain() {
         let chain = LayerChain::new();
         let req = PayLoad {
-            data: "test".to_string(),
-            ctx: ChainContext { data: "test".to_string() },
+            data: Some("test".to_string()),
+            ctx: None,
         };
         
         assert!(chain.handle_inbound(req.clone()).is_err());
@@ -252,7 +252,7 @@ mod tests {
                 LayerResult {
                     direction: Direction::Inbound,
                     data: Some(PayLoad {
-                        data: req.data + "_processed",
+                        data: req.data,
                         ctx: req.ctx,
                     }),
                 }
@@ -262,7 +262,7 @@ mod tests {
                 LayerResult {
                     direction: Direction::Outbound,
                     data: Some(PayLoad {
-                        data: req.data + "_processed",
+                        data: req.data,
                         ctx: req.ctx,
                     }),
                 }
@@ -273,8 +273,8 @@ mod tests {
         chain.add_layer(layer);
         
         let req = PayLoad {
-            data: "test".to_string(),
-            ctx: ChainContext { data: "test".to_string() },
+            data: Some("test".to_string()),
+            ctx: None,
         };
         
         assert!(chain.handle_inbound(req.clone()).is_ok());
@@ -288,10 +288,8 @@ mod tests {
            LayerResult {
               direction: Direction::Inbound,
               data: Some(PayLoad {
-                  data: req.data + "a",
-                  ctx: ChainContext {
-                      data: "test".to_string(),
-                  },
+                  data: req.data,
+                  ctx:None,
               }),
            }
        })
@@ -301,9 +299,7 @@ mod tests {
               direction: Direction::Outbound,
               data: Some(PayLoad {
                   data: req.data,
-                  ctx: ChainContext {
-                      data: "test".to_string(),
-                  },
+                  ctx: None,
               }),
            }
        })
@@ -315,9 +311,7 @@ mod tests {
               direction: Direction::Inbound,
               data: Some(PayLoad {
                   data: req.data,
-                  ctx: ChainContext {
-                      data: "test".to_string(),
-                  },
+                  ctx: None,
               }),
            }
        })
@@ -327,9 +321,7 @@ mod tests {
             direction: Direction::Outbound, 
             data: Some(PayLoad {
                 data: req.data,
-                ctx: ChainContext {
-                    data: "test".to_string(),
-                },
+                ctx: None,
             })
          }
       })
@@ -341,18 +333,14 @@ mod tests {
 
 
        let req = PayLoad {       
-          data: "hello".to_string(),
-          ctx: ChainContext {
-              data: "test".to_string(),
-          }
+          data: Some("hello".to_string()),
+          ctx: None
         };
           
        chain.handle_inbound(req).unwrap();
        let req = PayLoad {       
-            data: "hello".to_string(),
-            ctx: ChainContext {
-                data: "test".to_string(),
-            }
+            data: Some("hello".to_string()),
+            ctx: None
         };
        chain.handle_outbound(req).unwrap();
     }
