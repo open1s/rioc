@@ -4,11 +4,16 @@ mod inject;
 mod injectable;
 mod module;
 mod provider;
+mod verbatim;
+mod parse;
+mod expand;
 use inject::handle_inject;
 use injectable::handle_injectable;
 use module::handle_module;
+use parse::TraitImpl;
 use proc_macro::TokenStream;
 use provider::handle_provider;
+use syn::{parse::Nothing, parse_macro_input};
 
 /// For internal purposes only. Should not be used.
 #[proc_macro_derive(InjectableHelperAttr, attributes(inject))]
@@ -159,4 +164,11 @@ pub fn provider(_attr: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn module(attr: TokenStream, item: TokenStream) -> TokenStream {
     handle_module(attr, item).unwrap_or_else(|e| e.to_compile_error().into())
+}
+
+#[proc_macro_attribute]
+pub fn inherent(args: TokenStream, input: TokenStream) -> TokenStream {
+    parse_macro_input!(args as Nothing);
+    let input = parse_macro_input!(input as TraitImpl);
+    expand::inherent(input).into()
 }

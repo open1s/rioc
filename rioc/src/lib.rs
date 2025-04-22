@@ -1,4 +1,13 @@
 #![allow(unused_imports)]
+
+pub trait Runnable {
+    fn run(&mut self);
+}
+
+pub trait Callable<T> {
+    fn call(&mut self) -> T;
+}
+
 pub mod function;
 pub mod layer;
 

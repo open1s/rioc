@@ -12,7 +12,7 @@ checksum = "dcfed56ad506cb2c684a14971b8861fdc3baaaae314b9e5f9bb532cbe3ba7a4f"
 name = "basic"
 version = "0.1.0"
 dependencies = [
- "rioc 0.2.1",
+ "rioc 0.2.2",
 ]
 
 [[package]]
@@ -88,21 +88,21 @@ dependencies = [
 [[package]]
 name = "imacro"
 version = "0.4.4"
-dependencies = [
- "proc-macro2",
- "quote",
- "rioc 0.2.1",
- "syn",
-]
-
-[[package]]
-name = "imacro"
-version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8aecc99b5396212794863a348e07bce62aee4bc5e59cfb1f84b1b96bbba08de5"
 dependencies = [
  "proc-macro2",
  "quote",
+ "syn",
+]
+
+[[package]]
+name = "imacro"
+version = "0.4.6"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "rioc 0.2.2",
  "syn",
 ]
 
@@ -183,16 +183,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "746730d4dd5684c712ed76b029b8a8ea89982e3b40719dd7ac2dae7a89e2162b"
 dependencies = [
  "ibag",
- "imacro 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "imacro 0.4.4",
  "irgo",
 ]
 
 [[package]]
 name = "rioc"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "ibag",
- "imacro 0.4.4",
+ "imacro 0.4.6",
  "irgo",
 ]
 
