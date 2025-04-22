@@ -12,7 +12,7 @@ checksum = "dcfed56ad506cb2c684a14971b8861fdc3baaaae314b9e5f9bb532cbe3ba7a4f"
 name = "basic"
 version = "0.1.0"
 dependencies = [
- "rioc 0.2.4",
+ "rioc 0.2.5",
 ]
 
 [[package]]
@@ -189,7 +189,7 @@ dependencies = [
 
 [[package]]
 name = "rioc"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "ibag",
  "imacro 0.4.8",

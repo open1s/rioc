@@ -1,5 +1,5 @@
 use std::{cell::RefCell, collections::HashMap};
-use std::clone;
+use std::{any, clone};
 use std::collections::VecDeque;
 use std::error::Error;
 use std::rc::Rc;
@@ -31,16 +31,16 @@ pub struct LayerResult {
 
 
 pub struct ProtocolAware{
-    func: Box<dyn Fn(PayLoad) -> LayerResult>,
+    func: Box<dyn Fn(Option<PayLoad>) -> Result<LayerResult, String>>,
 }
 
-impl Service<PayLoad,LayerResult> for ProtocolAware {
-    fn call(&self, input: PayLoad) -> LayerResult {
+impl Service<Option<PayLoad>,Result<LayerResult, String>> for ProtocolAware {
+    fn call(&self, input: Option<PayLoad>) -> Result<LayerResult, String> {
         (self.func)(input)
     }
 }
 
-pub fn protocol_handler(f: impl Fn(PayLoad) -> LayerResult + 'static) -> ProtocolAware {
+pub fn protocol_handler(f: impl Fn(Option<PayLoad>) -> Result<LayerResult, String> + 'static) -> ProtocolAware {
    ProtocolAware { func: Box::new(f)}
 }
 
@@ -67,9 +67,13 @@ impl Layer {
         }
     }
 
-    pub fn handle_inbound(&self, req: PayLoad) -> Result<(), String> {
+    pub fn handle_inbound(&self, req: Option<PayLoad>) -> Result<(), String> {
         // 先执行 call，拿到结果，避免嵌套 borrow
         let result = self.handle_inbound.call(req);
+        if result.is_err() {
+            return Err("failed to handle inbound request".into());
+        }
+        let result = result.unwrap();
 
         let (direction, data) = (result.direction, result.data);
 
@@ -79,16 +83,12 @@ impl Layer {
         match direction {
             Direction::Inbound => {
                 if let Some(upstream) = upstream {
-                    if let Some(data) = data {
-                        upstream.borrow().handle_inbound(data)?;
-                    }
+                    upstream.borrow().handle_inbound(data)?;
                 }
             }
             Direction::Outbound => {
                 if let Some(downstream) = downstream {
-                    if let Some(data) = data {
-                        downstream.borrow().handle_outbound(data)?;
-                    }
+                    downstream.borrow().handle_outbound(data)?;
                 }
             }
         }
@@ -96,9 +96,13 @@ impl Layer {
         Ok(())
     }
 
-    pub fn handle_outbound(&self, req: PayLoad) ->  Result<(), String> {
+    pub fn handle_outbound(&self, req: Option<PayLoad>) ->  Result<(), String> {
         // 先执行 call，拿到结果，避免嵌套 borrow
         let result = self.handle_outbound.call(req);
+        if result.is_err() {
+            return Err("failed to handle outbound request".into());
+        }
+        let result = result.unwrap();
 
         let (direction, data) = (result.direction, result.data);
 
@@ -108,16 +112,12 @@ impl Layer {
         match direction {
             Direction::Inbound => {
                 if let Some(upstream) = upstream {
-                    if let Some(data) = data {
-                        upstream.borrow().handle_inbound(data)?;
-                    }
+                    upstream.borrow().handle_inbound(data)?;
                 }
             }
             Direction::Outbound => {
                 if let Some(downstream) = downstream {
-                    if let Some(data) = data {
-                        downstream.borrow().handle_outbound(data)?;
-                    }
+                    downstream.borrow().handle_outbound(data)?;
                 }
             }
         }
@@ -141,7 +141,7 @@ impl LayerBuilder {
 
     pub fn with_inbound_fn(
         mut self,
-        handle: impl Fn(PayLoad) -> LayerResult + 'static,
+        handle: impl Fn(Option<PayLoad>) -> Result<LayerResult,String> + 'static,
     ) -> Self {
         let handle = ProtocolAware { func: Box::new(handle) };
         self.hanlde_inbound = Some(Rc::new(Box::new(handle)));
@@ -150,7 +150,7 @@ impl LayerBuilder {
 
     pub fn with_outbound_fn(
         mut self,
-        handle: impl Fn(PayLoad) -> LayerResult + 'static,
+        handle: impl Fn(Option<PayLoad>) -> Result<LayerResult,String> + 'static,
     ) -> Self {
         let handle = ProtocolAware { func: Box::new(handle) };
         self.handle_outbound = Some(Rc::new(Box::new(handle)));
@@ -214,7 +214,7 @@ impl LayerChain {
         }
 
         let head = self.head.clone().unwrap();
-        let _ = head.borrow().handle_inbound(req.clone());
+        let _ = head.borrow().handle_inbound(Some(req));
         Ok(())
     }
 
@@ -223,7 +223,7 @@ impl LayerChain {
             return Err("No layers in the chain".into());
         }
         let tail = self.tail.clone().unwrap();
-        let _ = tail.borrow().handle_outbound(req.clone());
+        let _ = tail.borrow().handle_outbound(Some(req));
         Ok(())
     }
 }
@@ -249,23 +249,25 @@ mod tests {
         let layer = LayerBuilder::new()
             .with_inbound_fn(|req| {
                 println!("layer inbound: {:?}", req);
-                LayerResult {
+                let req = req.unwrap();
+                Ok(LayerResult {
                     direction: Direction::Inbound,
                     data: Some(PayLoad {
                         data: req.data,
-                        ctx: req.ctx,
+                        ctx:  req.ctx,
                     }),
-                }
+                })
             })
             .with_outbound_fn(|req| {
                 println!("layer outbound: {:?}", req);
-                LayerResult {
+                let req = req.unwrap();
+                Ok(LayerResult {
                     direction: Direction::Outbound,
                     data: Some(PayLoad {
                         data: req.data,
-                        ctx: req.ctx,
+                        ctx:  req.ctx,
                     }),
-                }
+                })
             })
             .build().unwrap();
 
@@ -285,45 +287,49 @@ mod tests {
     fn test_layer_builder() {
        let layer0 = LayerBuilder::new().with_inbound_fn(|req|{
            println!("layer0 inbound: {:?}", req);
-           LayerResult {
+           let req = req.unwrap();
+           Ok(LayerResult {
               direction: Direction::Inbound,
               data: Some(PayLoad {
                   data: req.data,
                   ctx:None,
               }),
-           }
+           })
        })
        .with_outbound_fn(|req|{
            println!("layer0 outbound: {:?}", req);
-           LayerResult {
+           let req = req.unwrap();
+           Ok(LayerResult {
               direction: Direction::Outbound,
               data: Some(PayLoad {
                   data: req.data,
                   ctx: None,
               }),
-           }
+           })
        })
        .build().unwrap();
 
        let layer1 = LayerBuilder::new().with_inbound_fn(|req|{
            println!("layer1 inbound: {:?}", req);
-           LayerResult {
+           let req = req.unwrap();
+           Ok(LayerResult {
               direction: Direction::Inbound,
               data: Some(PayLoad {
                   data: req.data,
                   ctx: None,
               }),
-           }
+           })
        })
       .with_outbound_fn(|req|{
          println!("layer1 outbound: {:?}", req);
-         LayerResult { 
+         let req = req.unwrap();
+         Ok(LayerResult { 
             direction: Direction::Outbound, 
             data: Some(PayLoad {
                 data: req.data,
                 ctx: None,
             })
-         }
+         })
       })
       .build().unwrap();
 

@@ -67,16 +67,16 @@ mod tests {
     #[test]
     fn layer_fn_has_useful_debug_impl() {
         struct WrappedService<S> {
-            inner: S,
+            _inner: S,
         }
         let layer = Arc::new(service(|svc| {
             println!("Layer called");
-            WrappedService { inner: svc }
+            WrappedService { _inner: svc }
         }));
         let _svc = layer.call("foo");
 
         let cloned = layer.clone();
-        std::thread::spawn(move || {
+        let _= std::thread::spawn(move || {
             cloned.call("foo");
             println!("Thread finished");
         }).join();
@@ -91,7 +91,7 @@ mod tests {
 
     #[test]
     fn service_fn_exa() {
-        let f = Function::new (|x: i32| "hello");
+        let f = Function::new (|_x: i32| "hello");
         assert!(f.call(1) == "hello")
     }
 }
