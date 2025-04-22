@@ -1,6 +1,6 @@
 [package]
 name = "imacro"
-version = "0.4.6"
+version = "0.4.7"
 edition = "2021"
 description = "Zero cost dependency injection macros"
 rust-version = "1.60"
@@ -15,6 +15,4 @@ proc-macro = true
 proc-macro2 = "1.0"
 quote = "1.0"
 syn = { version = "2.0", features = ["full"] }
-
-[dev-dependencies]
-rioc = { path = "../rioc" }
+rioc = { version = "0.2.2"}
