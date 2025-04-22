@@ -1,6 +1,6 @@
 [package]
 name = "iconfig"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 
 description = "mergable configuration file for rioc"
@@ -13,7 +13,7 @@ toml = "0.8"
 anyhow = { version = "1.0"}
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0"}
-rioc = { version = "0.1" }
+rioc = { version = "0.2" }
 
 [dev-dependencies]
 tempfile = "3.8"

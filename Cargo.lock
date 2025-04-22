@@ -12,7 +12,7 @@ checksum = "dcfed56ad506cb2c684a14971b8861fdc3baaaae314b9e5f9bb532cbe3ba7a4f"
 name = "basic"
 version = "0.1.0"
 dependencies = [
- "rioc 0.2.3",
+ "rioc 0.2.4",
 ]
 
 [[package]]
@@ -75,10 +75,10 @@ checksum = "3ff763b9c930282f08130bc06008bc1c6dd2c6f2256a27ceaf02813ecb1e41c5"
 
 [[package]]
 name = "iconfig"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "anyhow",
- "rioc 0.1.1",
+ "rioc 0.2.2",
  "serde",
  "serde_json",
  "tempfile",
@@ -98,7 +98,7 @@ dependencies = [
 
 [[package]]
 name = "imacro"
-version = "0.4.7"
+version = "0.4.8"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -178,17 +178,6 @@ checksum = "74765f6d916ee2faa39bc8e68e4f3ed8949b48cccdac59983d287a7cb71ce9c5"
 
 [[package]]
 name = "rioc"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "746730d4dd5684c712ed76b029b8a8ea89982e3b40719dd7ac2dae7a89e2162b"
-dependencies = [
- "ibag",
- "imacro 0.4.4",
- "irgo",
-]
-
-[[package]]
-name = "rioc"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "823bff4b482b0a3c52db7928bdc529b880cbc47c2466f2640af0e225267f76c8"
@@ -200,10 +189,10 @@ dependencies = [
 
 [[package]]
 name = "rioc"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "ibag",
- "imacro 0.4.7",
+ "imacro 0.4.8",
  "irgo",
 ]
 
