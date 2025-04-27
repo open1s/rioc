@@ -208,22 +208,22 @@ impl LayerChain {
         self.tail.clone()
     }
 
-    pub fn handle_inbound(&self, req: PayLoad) -> Result<(), String>  {
+    pub fn handle_inbound(&self, req: Option<PayLoad>) -> Result<(), String>  {
         if self.head.is_none() {
             return Err("No layers in the chain".into());
         }
 
         let head = self.head.clone().unwrap();
-        let _ = head.borrow().handle_inbound(Some(req));
+        let Result = head.borrow().handle_inbound(req);
         Ok(())
     }
 
-    pub fn handle_outbound(&self, req: PayLoad) -> Result<(), String> {
+    pub fn handle_outbound(&self, req: Option<PayLoad>) -> Result<(), String> {
         if self.tail.is_none() {
             return Err("No layers in the chain".into());
         }
         let tail = self.tail.clone().unwrap();
-        let _ = tail.borrow().handle_outbound(Some(req));
+        let _ = tail.borrow().handle_outbound(req);
         Ok(())
     }
 }
@@ -240,8 +240,8 @@ mod tests {
             ctx: None,
         };
         
-        assert!(chain.handle_inbound(req.clone()).is_err());
-        assert!(chain.handle_outbound(req).is_err());
+        assert!(chain.handle_inbound(Some(req.clone())).is_err());
+        assert!(chain.handle_outbound(Some(req)).is_err());
     }
 
     #[test]
@@ -279,8 +279,8 @@ mod tests {
             ctx: None,
         };
         
-        assert!(chain.handle_inbound(req.clone()).is_ok());
-        assert!(chain.handle_outbound(req).is_ok());
+        assert!(chain.handle_inbound(Some(req.clone())).is_ok());
+        assert!(chain.handle_outbound(Some(req)).is_ok());
     }
 
     #[test]
@@ -343,11 +343,11 @@ mod tests {
           ctx: None
         };
           
-       chain.handle_inbound(req).unwrap();
+       chain.handle_inbound(Some(req)).unwrap();
        let req = PayLoad {       
             data: Some("hello".to_string()),
             ctx: None
         };
-       chain.handle_outbound(req).unwrap();
+       chain.handle_outbound(Some(req)).unwrap();
     }
 }
