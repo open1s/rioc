@@ -1,6 +1,6 @@
 [package]
 name = "rioc"
-version = "0.2.6"
+version = "0.2.8"
 edition = "2021"
 description = "Zero cost dependency injection macros"
 rust-version = "1.60"

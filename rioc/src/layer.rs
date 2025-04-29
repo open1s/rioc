@@ -67,13 +67,14 @@ impl Layer {
         }
     }
 
-    pub fn handle_inbound(&self, req: Option<PayLoad>) -> Result<(), String> {
+    pub fn handle_inbound(&self, req: Option<PayLoad>) -> Result<LayerResult, String> {
         // 先执行 call，拿到结果，避免嵌套 borrow
         let result = self.handle_inbound.call(req);
         if result.is_err() {
             return Err("failed to handle inbound request".into());
         }
         let result = result.unwrap();
+        let mut cloned_result = result.clone();
 
         let (direction, data) = (result.direction, result.data);
 
@@ -83,26 +84,27 @@ impl Layer {
         match direction {
             Direction::Inbound => {
                 if let Some(upstream) = upstream {
-                    upstream.borrow().handle_inbound(data)?;
+                    cloned_result = upstream.borrow().handle_inbound(data)?;
                 }
             }
             Direction::Outbound => {
                 if let Some(downstream) = downstream {
-                    downstream.borrow().handle_outbound(data)?;
+                    cloned_result = downstream.borrow().handle_outbound(data)?;
                 }
             }
         }
 
-        Ok(())
+        Ok(cloned_result)
     }
 
-    pub fn handle_outbound(&self, req: Option<PayLoad>) ->  Result<(), String> {
+    pub fn handle_outbound(&self, req: Option<PayLoad>) ->  Result<LayerResult, String> {
         // 先执行 call，拿到结果，避免嵌套 borrow
-        let result = self.handle_outbound.call(req);
+        let result: Result<LayerResult, String> = self.handle_outbound.call(req);
         if result.is_err() {
             return Err("failed to handle outbound request".into());
         }
         let result = result.unwrap();
+        let mut cloned_result = result.clone();
 
         let (direction, data) = (result.direction, result.data);
 
@@ -112,17 +114,17 @@ impl Layer {
         match direction {
             Direction::Inbound => {
                 if let Some(upstream) = upstream {
-                    upstream.borrow().handle_inbound(data)?;
+                    cloned_result = upstream.borrow().handle_inbound(data)?;
                 }
             }
             Direction::Outbound => {
                 if let Some(downstream) = downstream {
-                    downstream.borrow().handle_outbound(data)?;
+                    cloned_result = downstream.borrow().handle_outbound(data)?;
                 }
             }
         }
 
-        Ok(())
+        Ok(cloned_result)
     }
 }
 
@@ -208,23 +210,23 @@ impl LayerChain {
         self.tail.clone()
     }
 
-    pub fn handle_inbound(&self, req: Option<PayLoad>) -> Result<(), String>  {
+    pub fn handle_inbound(&self, req: Option<PayLoad>) -> Result<LayerResult, String>  {
         if self.head.is_none() {
             return Err("No layers in the chain".into());
         }
 
         let head = self.head.clone().unwrap();
-        let Result = head.borrow().handle_inbound(req);
-        Ok(())
+        let result = head.borrow().handle_inbound(req);
+        result
     }
 
-    pub fn handle_outbound(&self, req: Option<PayLoad>) -> Result<(), String> {
+    pub fn handle_outbound(&self, req: Option<PayLoad>) -> Result<LayerResult, String> {
         if self.tail.is_none() {
             return Err("No layers in the chain".into());
         }
         let tail = self.tail.clone().unwrap();
-        let _ = tail.borrow().handle_outbound(req);
-        Ok(())
+        let result = tail.borrow().handle_outbound(req);
+        result
     }
 }
 
