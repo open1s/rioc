@@ -1,8 +1,9 @@
+use std::sync::Weak;
 use std::{cell::RefCell, collections::HashMap};
 use std::{any, clone};
 use std::collections::VecDeque;
 use std::error::Error;
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::function::{service, Function, Service};
 
@@ -44,20 +45,21 @@ pub fn protocol_handler(f: impl Fn(Option<PayLoad>) -> Result<LayerResult, Strin
    ProtocolAware { func: Box::new(f)}
 }
 
-pub type SharedLayer = Rc<RefCell<Layer>>;
+pub type SharedLayer = Arc<RefCell<Layer>>;
+pub type WeakLayer = Weak<RefCell<Layer>>;
 
 #[derive(Clone)]
 pub struct Layer {
-    pub handle_inbound: Rc<Box<ProtocolAware>>,
-    pub handle_outbound: Rc<Box<ProtocolAware>>,
+    pub handle_inbound: Arc<Box<ProtocolAware>>,
+    pub handle_outbound: Arc<Box<ProtocolAware>>,
     pub lo_layer: Option<SharedLayer>,
-    pub up_layer: Option<SharedLayer>,
+    pub up_layer: Option<WeakLayer>,
 }
 
 impl Layer {
     pub fn new(
-        handle_inbound: Rc<Box<ProtocolAware>>,
-        handle_outbound: Rc<Box<ProtocolAware>>,
+        handle_inbound: Arc<Box<ProtocolAware>>,
+        handle_outbound: Arc<Box<ProtocolAware>>,
     ) -> Self {
         Self {
             handle_inbound,
@@ -84,7 +86,11 @@ impl Layer {
         match direction {
             Direction::Inbound => {
                 if let Some(upstream) = upstream {
-                    cloned_result = upstream.borrow().handle_inbound(data)?;
+                    if let Some(upstream) = upstream.upgrade(){
+                        cloned_result = upstream.borrow().handle_inbound(data)?;
+                    }else{
+                        return Err("failed to handle inbound request".into());
+                    }
                 }
             }
             Direction::Outbound => {
@@ -114,7 +120,11 @@ impl Layer {
         match direction {
             Direction::Inbound => {
                 if let Some(upstream) = upstream {
-                    cloned_result = upstream.borrow().handle_inbound(data)?;
+                    if let Some(upstream) = upstream.upgrade(){
+                        cloned_result = upstream.borrow().handle_inbound(data)?;
+                    }else {
+                        return Err("failed to handle inbound request".into());
+                    }               
                 }
             }
             Direction::Outbound => {
@@ -129,8 +139,8 @@ impl Layer {
 }
 
 pub struct LayerBuilder {
-    hanlde_inbound: Option<Rc<Box<ProtocolAware>>>,
-    handle_outbound: Option<Rc<Box<ProtocolAware>>>,
+    hanlde_inbound: Option<Arc<Box<ProtocolAware>>>,
+    handle_outbound: Option<Arc<Box<ProtocolAware>>>,
 }
 
 impl LayerBuilder {
@@ -146,7 +156,7 @@ impl LayerBuilder {
         handle: impl Fn(Option<PayLoad>) -> Result<LayerResult,String> + 'static,
     ) -> Self {
         let handle = ProtocolAware { func: Box::new(handle) };
-        self.hanlde_inbound = Some(Rc::new(Box::new(handle)));
+        self.hanlde_inbound = Some(Arc::new(Box::new(handle)));
         self
     }
 
@@ -155,14 +165,14 @@ impl LayerBuilder {
         handle: impl Fn(Option<PayLoad>) -> Result<LayerResult,String> + 'static,
     ) -> Self {
         let handle = ProtocolAware { func: Box::new(handle) };
-        self.handle_outbound = Some(Rc::new(Box::new(handle)));
+        self.handle_outbound = Some(Arc::new(Box::new(handle)));
         self
     }
 
-    pub fn build(self) -> Result<Rc<RefCell<Layer>>, String> {
+    pub fn build(self) -> Result<Arc<RefCell<Layer>>, String> {
         let inbound = self.hanlde_inbound.ok_or("inbound handler not set")?;
         let outbound = self.handle_outbound.ok_or("outbound handler not set")?;
-        Ok(Rc::new(RefCell::new(Layer {
+        Ok(Arc::new(RefCell::new(Layer {
             handle_inbound: inbound,
             handle_outbound: outbound,
             up_layer: None,
@@ -188,7 +198,8 @@ impl LayerChain {
         match self.tail.take() {
             Some(tail) => {
                 // tail -> new layer
-                tail.borrow_mut().up_layer = Some(layer.clone());
+                // tail.borrow_mut().up_layer = Some(layer.clone());
+                tail.borrow_mut().up_layer = Some(Arc::downgrade(&layer));
                 // new layer -> tail
                 layer.borrow_mut().lo_layer = Some(tail.clone());
                 self.tail = Some(layer);
@@ -227,6 +238,13 @@ impl LayerChain {
         let tail = self.tail.clone().unwrap();
         let result = tail.borrow().handle_outbound(req);
         result
+    }
+}
+
+impl Drop for LayerChain {
+    fn drop(&mut self) {
+        self.head = None;
+        self.tail = None;
     }
 }
 
