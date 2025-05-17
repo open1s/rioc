@@ -10,6 +10,7 @@ pub trait Callable<T> {
 
 pub mod function;
 pub mod layer;
+pub mod task;
 
 pub use function::Service;
 pub use function::service;
