@@ -1,6 +1,6 @@
 [package]
 name = "rioc"
-version = "0.2.9"
+version = "0.2.10"
 edition = "2021"
 description = "Zero cost dependency injection macros"
 rust-version = "1.60"
@@ -12,6 +12,10 @@ repository = "https://github.com/open1s/rioc"
 [features]
 
 [dependencies]
+crossbeam = { version = "0.8" }
+crossbeam-channel = { version = "0.5" }
+serde_json = { version = "1.0" }
+may = { version = "0.3" }
 imacro = { path = "../imacro" ,version = "0.4"}
 ibag = { version = "0.3" }
 irgo = { version = "0.2" }
