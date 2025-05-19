@@ -24,6 +24,8 @@ pub use layer::PayLoad;
 pub use layer::SharedLayer;
 pub use layer::ProtocolAware;
 pub use layer::LayerBuilder;
+pub use task::JobTask;
+pub use task::TaskEvent;
 
 pub use imacro::{
     inject, injectable, module, provider, InjectableHelperAttr, ModuleHelperAttr,

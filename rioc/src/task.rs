@@ -115,6 +115,7 @@ where
 #[cfg(test)]
 mod tests {
     use std::thread;
+    use generator::{done, Gn};
     use irgo::defer;
     use serde_json::json;
     use super::*;
@@ -164,5 +165,21 @@ mod tests {
         println!("Job cancelled!");
         std::thread::sleep(std::time::Duration::from_secs(3)); 
         println!("Main thread finished.");
+    }
+
+    #[test]
+    fn test_generator() {
+        let g = Gn::new_scoped(|mut s| {
+            let (mut a, mut b) = (0, 1);
+            while b < 200 {
+                std::mem::swap(&mut a, &mut b);
+                b = a + b;
+                s.yield_(b);
+            }
+            done!();
+        });
+        for i in g {
+            println!("{}", i);
+        }
     }
 }

@@ -18,7 +18,7 @@ checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
 name = "basic"
 version = "0.1.0"
 dependencies = [
- "rioc 0.2.10",
+ "rioc 0.2.11",
 ]
 
 [[package]]
@@ -410,10 +410,11 @@ dependencies = [
 
 [[package]]
 name = "rioc"
-version = "0.2.10"
+version = "0.2.11"
 dependencies = [
  "crossbeam",
  "crossbeam-channel",
+ "generator",
  "ibag",
  "imacro 0.4.8",
  "irgo",
